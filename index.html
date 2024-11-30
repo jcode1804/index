@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Website</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2, h3 {
+      text-align: center;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .hidden {
+      display: none;
+    }
+    .profile-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .profile-container img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%; /* This makes the image round */
+      object-fit: cover;
+      margin-bottom: 20px;
+    }
+    .profile-container input, .profile-container textarea {
+      width: 90%;
+      max-width: 400px;
+    }
+    .profile-container button {
+      max-width: 200px;
+    }
+    .member-profile {
+      border: 1px solid #ddd;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+    .member-profile img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%; /* Round profile picture for members */
+      object-fit: cover;
+      margin-right: 15px;
+    }
+    .message-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      margin: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .message-item img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%; /* Round profile picture for messages */
+      object-fit: cover;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Family Website</h1>
+
+    <!-- Registration Form -->
+    <div id="register-section" class="hidden">
+      <h2>Register</h2>
+      <input type="text" id="register-username" placeholder="Enter username" required>
+      <input type="password" id="register-password" placeholder="Enter password" required>
+      <button onclick="register()">Register</button>
+      <p id="register-message"></p>
+      <p>Already a member? <a href="javascript:void(0)" onclick="showLogin()">Login</a></p>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-section">
+      <h2>Login</h2>
+      <input type="text" id="login-username" placeholder="Enter username" required>
+      <input type="password" id="login-password" placeholder="Enter password" required>
+      <button onclick="login()">Login</button>
+      <p id="login-message"></p>
+      <p>Don't have an account? <a href="javascript:void(0)" onclick="showRegister()">Register</a></p>
+    </div>
+
+    <!-- User Dashboard -->
+    <div id="dashboard" class="hidden">
+      <h2>Welcome, <span id="user-name"></span>!</h2>
+      <button onclick="logout()">Logout</button>
+
+      <!-- Profile Section -->
+      <div id="profile-section" class="hidden">
+        <h3>Your Profile</h3>
+        <div class="profile-container">
+          <img id="profile-picture" src="default-profile.jpg" alt="Profile Picture">
+          <input type="file" id="profile-picture-upload" accept="image/*" onchange="uploadProfilePicture()">
+          <input type="text" id="profile-fullname" placeholder="Full Name">
+          <input type="text" id="profile-email" placeholder="Email Address">
+          <input type="tel" id="profile-phone" placeholder="Phone Number">
+          <input type="date" id="profile-birthdate">
+          <textarea id="profile-bio" placeholder="Write a short bio..." rows="4"></textarea>
+          <button onclick="saveProfile()">Save Profile</button>
+        </div>
+      </div>
+
+      <h3>Send a Message</h3>
+      <textarea id="message-content" placeholder="Write a message to your family..." required></textarea>
+      <button onclick="sendMessage()">Send Message</button>
+
+      <h3>Family Communication</h3>
+      <div id="messages-section">
+        <div class="message-list" id="message-list"></div>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-section" class="hidden">
+      <h2>Admin Dashboard</h2>
+      <button onclick="viewFamilyMembers()">View Family Members</button>
+      <div id="family-members-list" style="margin-top: 20px;"></div>
+
+      <!-- Add or Remove Member -->
+      <h3>Manage Family Members</h3>
+      <input type="text" id="new-member-username" placeholder="Enter new member username" />
+      <button onclick="addMember()">Add Member</button>
+      <div id="remove-member-section">
+        <input type="text" id="remove-member-username" placeholder="Enter username to remove" />
+        <button onclick="removeMember()">Remove Member</button>
+      </div>
+
+      <!-- Password Recovery for All Members -->
+      <h3>Password Recovery for Members</h3>
+      <input type="text" id="password-recovery-username" placeholder="Enter username to recover password" />
+      <input type="password" id="new-password" placeholder="Enter new password" required>
+      <button onclick="recoverPassword()">Recover Password</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Simulated Database
+    const users = [
+      { username: "James Erasto Msofe", password: "1804", isAdmin: true, profilePicture: "default-profile.jpg" }
+    ];
+    const messages = [];
+
+    // Variable to store current logged-in user
+    let currentUser = null;
+
+    // Show Login Form
+    function showLogin() {
+      document.getElementById("register-section").classList.add("hidden");
+      document.getElementById("login-section").classList.remove("hidden");
+      document.getElementById("register-message").textContent = '';
+    }
+
+    // Show Registration Form
+    function showRegister() {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("register-section").classList.remove("hidden");
+      document.getElementById("login-message").textContent = '';
+    }
+
+    // Register User Function
+    function register() {
+      const username = document.getElementById("register-username").value;
+      const password = document.getElementById("register-password").value;
+
+      if (username && password) {
+        const existingUser = users.find((user) => user.username === username);
+        if (existingUser) {
+          document.getElementById("register-message").textContent = "Username already exists. Please choose another.";
+        } else {
+          const isAdmin = false; // New users are not admins by default
+          const newUser = { username, password, isAdmin, profilePicture: "default-profile.jpg" };
+          users.push(newUser);
+          document.getElementById("register-username").value = '';
+          document.getElementById("register-password").value = '';
+          alert("Registration successful! You can now log in.");
+          showLogin();
+        }
+      } else {
+        document.getElementById("register-message").textContent = "Please fill out all fields.";
+      }
+    }
+
+    // Login Function
+    function login() {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+
+      const user = users.find((user) => user.username === username && user.password === password);
+      if (user) {
+        currentUser = user;
+        document.getElementById("login-message").textContent = '';
+        showDashboard();
+      } else {
+        document.getElementById("login-message").textContent = "Invalid username or password.";
+      }
+    }
+
+    // Show User Dashboard
+    function showDashboard() {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      document.getElementById("user-name").textContent = currentUser.username;
+
+      // Show profile section for members
+      document.getElementById("profile-section").classList.remove("hidden");
+
+      // If the user is an admin, show the admin dashboard
+      if (currentUser.username === "James Erasto Msofe") {
+        document.getElementById("admin-section").classList.remove("hidden");
+      }
+    }
+
+    // Logout Function
+    function logout() {
+      currentUser = null;
+      document.getElementById("dashboard").classList.add("hidden");
+      showLogin();
+    }
+
+    // Save Profile Information
+    function saveProfile() {
+      const fullname = document.getElementById("profile-fullname").value;
+      const email = document.getElementById("profile-email").value;
+      const phone = document.getElementById("profile-phone").value;
+      const birthdate = document.getElementById("profile-birthdate").value;
+      const bio = document.getElementById("profile-bio").value;
+
+      currentUser.fullname = fullname;
+      currentUser.email = email;
+      currentUser.phone = phone;
+      currentUser.birthdate = birthdate;
+      currentUser.bio = bio;
+
+      alert("Profile updated successfully!");
+    }
+
+    // Upload Profile Picture
+    function uploadProfilePicture() {
+      const fileInput = document.getElementById("profile-picture-upload");
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          currentUser.profilePicture = e.target.result;
+          document.getElementById("profile-picture").src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Send Message Function
+    function sendMessage() {
+      const messageContent = document.getElementById("message-content").value;
+      if (messageContent) {
+        messages.push({ username: currentUser.username, content: messageContent });
+        document.getElementById("message-content").value = '';
+        displayMessages();
+      }
+    }
+
+    // Display Messages
+    function displayMessages() {
+      const messageList = document.getElementById("message-list");
+      messageList.innerHTML = '';
+      messages.forEach(message => {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message-item");
+        messageElement.innerHTML = `
+          <img src="${currentUser.profilePicture}" alt="Profile Picture">
+          <span><strong>${message.username}:</strong> ${message.content}</span>
+        `;
+        messageList.appendChild(messageElement);
+      });
+    }
+
+    // Admin: View Family Members
+    function viewFamilyMembers() {
+      const memberList = users.filter(user => user.username !== "James Erasto Msofe");
+      const familyMembersSection = document.getElementById("family-members-list");
+      familyMembersSection.innerHTML = "<h3>Family Members</h3>";
+      memberList.forEach(member => {
+        familyMembersSection.innerHTML += `
+          <div class="member-profile">
+            <img src="${member.profilePicture}" alt="Profile Picture">
+            <p><strong>${member.username}</strong></p>
+            <p>Full Name: ${member.fullname || "Not set"}</p>
+            <p>Email: ${member.email || "Not set"}</p>
+            <p>Phone: ${member.phone || "Not set"}</p>
+            <p>Birthdate: ${member.birthdate || "Not set"}</p>
+            <p>Bio: ${member.bio || "Not set"}</p>
+          </div>
+        `;
+      });
+    }
+
+    // Admin: Add Member
+    function addMember() {
+      const newUsername = document.getElementById("new-member-username").value;
+      if (newUsername) {
+        const newMember = { username: newUsername, password: "default123", isAdmin: false, profilePicture: "default-profile.jpg" };
+        users.push(newMember);
+        alert("New member added successfully!");
+        document.getElementById("new-member-username").value = '';
+        viewFamilyMembers();
+      } else {
+        alert("Please enter a username to add.");
+      }
+    }
+
+    // Admin: Remove Member
+    function removeMember() {
+      const removeUsername = document.getElementById("remove-member-username").value;
+      const index = users.findIndex(user => user.username === removeUsername);
+      if (index !== -1) {
+        users.splice(index, 1);
+        alert("Member removed successfully!");
+        document.getElementById("remove-member-username").value = '';
+        viewFamilyMembers();
+      } else {
+        alert("Member not found.");
+      }
+    }
+
+    // Admin: Recover Password
+    function recoverPassword() {
+      const username = document.getElementById("password-recovery-username").value;
+      const newPassword = document.getElementById("new-password").value;
+      const user = users.find(u => u.username === username);
+      if (user) {
+        user.password = newPassword;
+        alert("Password successfully updated for " + username);
+      } else {
+        alert("User not found.");
+      }
+    }
+  </script>
+</body>
+</html>
